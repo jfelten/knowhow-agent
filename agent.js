@@ -1,8 +1,5 @@
-var logger=require('./routes/log-control').logger;
-var path = require('path');
-var os = require('os');
-
 //create a ref to variables like port passed in through the command line
+var process = require('process');
 var agentData = require('yargs').argv;
 var defaultPort = 3000;
 if (agentData.port == undefined) {
@@ -11,6 +8,20 @@ if (agentData.port == undefined) {
 if (agentData.mode == undefined) {
 	agentData.mode = "development"
 }
+if (agentData.workingDir) {
+	process.chdir(agentData.workingDir)
+	console.log("set working directory to: "+agentData.workingDir);
+}
+
+var logger=require('./routes/log-control').logger;
+var path = require('path');
+var os = require('os');
+var zlib = require('zlib');
+var fstream = require('fstream');
+var tar = require('tar');
+
+
+
 
 exports.agentData = agentData;
 
@@ -100,7 +111,33 @@ process.on('exit', function() {
 			exec('deltree '+agent_dir);
 		}
 		
-	}
-		
+	}	
 
 });
+
+
+exports.packAgent = function(outputPath, callback) {
+
+	var agent = this.agent;
+	//create agent archive
+	logger.info('packaging agent');
+	fstream.Reader({ 'path': __dirname , 'type': 'Directory' }) /* Read the source directory */
+	.pipe(tar.Pack()) /* Convert the directory to a .tar file */
+	.pipe(zlib.Gzip()) /* Compress the .tar file */
+	.pipe(fstream.Writer({ 'path': outputPath }).on("close", function () {
+		logger.info('agent packaged.');
+	}).on("error",function(){
+		if (this.agent) {
+			eventEmitter.emit('agent-error', agent);
+		}
+		logger.error('error packing agent: ', err);
+		if (callback) {
+			callback(new Error("Unable to pack agent"));
+		}
+	})).on("close", function () {
+		if (callback) {
+			callback();
+		}
+	});
+	
+};
