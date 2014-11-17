@@ -1,6 +1,6 @@
 {
   "name": "knowhow-agent",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "KnowHow Agent",
   "main": "index.js",
   "directories": {
