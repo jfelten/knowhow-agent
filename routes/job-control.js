@@ -12,6 +12,8 @@ var zlib = require('zlib');
 var tar = require('tar');
 var domain = require('domain');
 var fileControl = require('./file-control');
+var KnowhowShell = require('knowhow-shell');
+var knowhowShell = new KnowhowShell(eventEmitter);
 
 //constants
 var WORKING_DIR_VAR = "working_dir"
@@ -135,13 +137,16 @@ execute = function(job, agentInfo, serverInfo, callback) {
 				logger.info("all files received - executing job");
 				job.status="All files Received.";
 				eventEmitter.emit('job-update',job);
-				try {
-					commandShell.executeSync(job, agentInfo, serverInfo, eventEmitter);
-				}
-				catch (err) {
-					job.status="Error "+err;
-					cancelJob(job);	
-				}
+
+				knowhowShell.executeJob(job, function(err, jobRuntime) {
+					if(err) {
+						job.status="Error "+err;
+						cancelJob(job);	
+						
+					}
+					logger.debug(jobRuntime.output);
+				});
+				
 			});
 		
 		});
