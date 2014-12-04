@@ -89,7 +89,7 @@ cancelJob = function(job) {
 		job.error = true;
 		job.progress=0;
 		updateJob(job);
-		commandShell.cancelRunningJob();
+		knowhowShell.cancelRunningJob();
 		logger.info('canceling job: '+job.id);
 		eventEmitter.emit('job-cancel', job);
 		eventEmitter.emit('upload-complete',job);
@@ -169,7 +169,7 @@ waitForFiles = function(job,callback) {
     	logger.info("setting job timeout to: "+timeoutms);
     }
     
-    if (job.files.length >0 ) {
+    if (job.files && job.files.length >0 ) {
 	    var timeout = setTimeout(function() {
 	    	logger.info("job: "+job.id+" file upload timed out.");
 	    	clearInterval(fileCheck);
