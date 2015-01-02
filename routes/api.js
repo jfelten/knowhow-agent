@@ -27,6 +27,11 @@ exports.deleteAgent = function(req,res) {
 
 };
 
+exports.cancelJob = function(req,res) {
+	var job = req.body;
+	jobControl.cancelJob(job);
+	res.json({ok:true});
+}
 
 exports.registerAgent = function(req,res) {
 	logger.info("register agent");
@@ -79,6 +84,7 @@ exports.execute = function(req,res) {
 			jobControl.execute(job, agentInfo, serverInfo, function(err, job) {
 				if (err) {
 					res.send(500, {"message": err.message});
+					return;
 				}
 				res.json({'ok': true});
 			});

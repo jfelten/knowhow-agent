@@ -84,7 +84,6 @@ app.get('/status',function(req, res) {
 		
 });
 
-
 //JSON API
 app.post('/api/execute', api.execute);
 app.get('/api/status', api.status);

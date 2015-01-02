@@ -12,6 +12,7 @@ var zlib = require('zlib');
 var tar = require('tar');
 var domain = require('domain');
 var fileControl = require('./file-control');
+//var KnowhowShell = require('../../knowhow-shell');
 var KnowhowShell = require('knowhow-shell');
 var knowhowShell = new KnowhowShell(eventEmitter);
 
@@ -89,7 +90,7 @@ cancelJob = function(job) {
 		job.error = true;
 		job.progress=0;
 		updateJob(job);
-		knowhowShell.cancelRunningJob();
+		knowhowShell.cancelJob();
 		logger.info('canceling job: '+job.id);
 		eventEmitter.emit('job-cancel', job);
 		eventEmitter.emit('upload-complete',job);
@@ -140,11 +141,14 @@ execute = function(job, agentInfo, serverInfo, callback) {
 
 				knowhowShell.executeJob(job, function(err, jobRuntime) {
 					if(err) {
+						logger.error(job.id+" failed to execute: "+err.message);
 						job.status="Error "+err;
 						cancelJob(job);	
 						
 					}
-					logger.debug(jobRuntime.output);
+					//if (jobRuntime.output) {
+					//	logger.debug(jobRuntime.output);
+					//}
 				});
 				
 			});
@@ -231,7 +235,7 @@ waitForFiles = function(job,callback) {
 	    		
 	    		
 	    	}
-	    	if (numFilesUploaded >= Object.keys(job.fileProgress).length) {
+	    	if (numFilesUploaded >= Object.keys(job.files).length) {
     			clearTimeout(timeout);
     			clearInterval(fileCheck);
     			logger.info("upload complete: num files received="+numFilesUploaded+" expected: "+Object.keys(job.fileProgress).length);
