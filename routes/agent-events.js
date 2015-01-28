@@ -46,7 +46,18 @@ function sendJobEventToServer(eventType, job) {
 			}
 		}
 	}
-}	
+}
+
+function sendExecutionEventToServer(eventType, command) {
+	if (command) {
+		for (var i=0; i<connectedSockets.length; i++) {
+			var socket = connectedSockets[i];
+			if (socket) {
+				socket.emit(eventType, command);
+			}
+		}
+	}
+}
 
 function sendAgentEventToServer(eventType, agent) {
 	if (agent) {
@@ -65,7 +76,23 @@ AgentEventHandler = function(io, agentControl) {
 	this.io = io;
 	this.eventEmitter = agentControl.eventEmitter;
 	logger.info("eventEmitter="+this.eventEmitter);
-	
+		
+		jobControl.eventEmitter.on('execution-complete', function(command) {
+			if (command) {
+				logger.debug(command);
+				//socket.emit('job-update', job);
+				sendExecutionEventToServer('execution-complete',  command);
+			}
+		});
+		
+		jobControl.eventEmitter.on('execution-error', function(command) {
+			if (command) {
+				logger.debug("execution complete event");
+				//socket.emit('job-update', job);
+				sendExecutionEventToServer('execution-error', command);
+			}
+		});
+		
 		jobControl.eventEmitter.on('job-update', function(job) {
 			if (job) {
 				logger.debug("emit job-update");

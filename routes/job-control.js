@@ -119,11 +119,9 @@ execute = function(job, agentInfo, serverInfo, callback) {
 			    if (job) {
 					job.status="Error Initializing job";
 					cancelJob(job);
-					callback(err,job);
-				} else {
-					callback(err,{});
-				}
-							
+					//callback(err,job);
+				} 
+				callback(err,job);
 				return;
 			}
 			callback(undefined,job);

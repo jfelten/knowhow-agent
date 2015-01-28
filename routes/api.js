@@ -80,6 +80,7 @@ exports.execute = function(req,res) {
 			logger.debug(require('./job-control').jobQueue[job.id]);
 			logger.info("execute");
 			res.json(500, {"message": "job id: '+job.id+' already running"} );
+			return;
 		} else {
 			jobControl.execute(job, agentInfo, serverInfo, function(err, job) {
 				if (err) {
