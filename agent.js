@@ -1,7 +1,8 @@
 //create a ref to variables like port passed in through the command line
 var process = require('process');
 var agentData = require('yargs').argv;
-var defaultPort = 3000;
+var encrypt = require('./util/encrypt');
+var defaultPort = 3141;
 if (agentData.port == undefined) {
 	agentData.port = defaultPort;
 }
@@ -11,6 +12,14 @@ if (agentData.mode == undefined) {
 if (agentData.workingDir) {
 	process.chdir(agentData.workingDir)
 	console.log("set working directory to: "+agentData.workingDir);
+}
+if (agentData.passwordEnc) {
+	if (agentData.encyrptKey) {
+		agentData.password = encrypt.decrypt(agentData.passwordEnc,agentData.encyrptKey);
+	} else {
+		agentData.password = encrypt.decrypt(agentData.passwordEnc,encrypt.defaultKey);
+	}
+	
 }
 
 var logger=require('./routes/log-control').logger;
@@ -102,7 +111,7 @@ socket = http.listen(agentData.port, function(){
 process.on('exit', function() {
 	exec = require('child_process').exec
 	if (agentData.mode == "production") {
-		var agent_dir = path.normalize( __dirname+path.sep+'..'+path.sep+'..'+path.sep+agentData._id);
+		var agent_dir = path.normalize(fs.realpathSync(process.cwd())+path.sep+'..'+path.sep+'..'+path.sep+agentData._id);
 		logger.info("deleting agent dir: "+agent_dir);
 		if (os.platform().indexOf('win') <0) {
 			exec('rm -rf '+agent_dir);

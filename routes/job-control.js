@@ -1,4 +1,4 @@
-var commandShell = require('./commandShell');
+
 var EventEmitter = require('events').EventEmitter;
 var eventEmitter = new EventEmitter();
 exports.eventEmitter = eventEmitter;
@@ -112,7 +112,7 @@ execute = function(job, agentInfo, serverInfo, callback) {
 		  cancelJob(job);	
 	});
 	d.run(function() {
-		logger.info("executing: "+job.id);
+		logger.info("executing: "+job.id+" "+agentInfo);
 		initiateJob(job, function(err,job) {
 			if (err) {
 				logger.error(err);
@@ -136,7 +136,14 @@ execute = function(job, agentInfo, serverInfo, callback) {
 				logger.info("all files received - executing job");
 				job.status="All files Received.";
 				eventEmitter.emit('job-update',job);
-
+				if (!job.script.env) {
+					job.script.env = {};
+				}
+				if (!job.env) {
+					job.env={};
+				}
+				job.env.agent_user = agentInfo.user;
+				job.env.agent_password = agentInfo.password;
 				knowhowShell.executeJob(job, function(err, jobRuntime) {
 					if(err) {
 						logger.error(job.id+" failed to execute: "+err.message);
