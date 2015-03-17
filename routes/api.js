@@ -65,9 +65,18 @@ exports.updateAgentInfo = function (req,res) {
 	logger.debug(agent);
 	var props = Object.getOwnPropertyNames(agent);
 	props.forEach(function(prop){
+		 
 		 logger.debug('updateAgentInfo: updating property: agent.'+prop);
 		 agentInfo[prop]=agent[prop];
 	});
+	if (agentInfo.passwordEnc) {
+		if (agentInfo.encyrptKey) {
+			agentInfo.password = encrypt.decrypt(agentInfo.passwordEnc,agentInfo.encyrptKey);
+		} else {
+			agentData.password = encrypt.decrypt(agentInfo.passwordEnc,encrypt.defaultKey);
+		}
+	}
+	
 	res.json({registered:true});
 	
 }
