@@ -2,6 +2,7 @@ require('./agent-control');
 require('./job-control');
 var crypto = require('crypto');
 var agent = require('../agent');
+var encrypt = require('../util/encrypt');
 var agentControl = new AgentControl(agent.io);
 var jobControl = new JobControl(agent.io);
 var loggerControl = new LoggerControl(agent.io);

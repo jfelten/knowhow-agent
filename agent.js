@@ -111,7 +111,7 @@ socket = http.listen(agentData.port, function(){
 process.on('exit', function() {
 	exec = require('child_process').exec
 	if (agentData.mode == "production") {
-		var agent_dir = path.normalize(fs.realpathSync(process.cwd())+path.sep+'..'+path.sep+'..'+path.sep+agentData._id);
+		var agent_dir = path.normalize(fs.realpathSync(process.cwd()));
 		logger.info("deleting agent dir: "+agent_dir);
 		if (os.platform().indexOf('win') <0) {
 			exec('rm -rf '+agent_dir);
