@@ -173,7 +173,11 @@ waitForFiles = function(job,callback) {
     
     //timeout after x seconds
     timeoutms=600000;//default timeout of 10 minutes
+    if (!job.options) {
+		job.options = {};
+	}
     if (job.options.timeoutms != undefined) {
+    	
     	timeoutms=job.options.timeoutms;
     	logger.info("setting job timeout to: "+timeoutms);
     }
