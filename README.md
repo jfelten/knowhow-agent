@@ -1,4 +1,4 @@
-knowhow-agent
+knowhow-agent [![Build Status](https://travis-ci.org/jfelten/knowhow-agent.svg)](https://travis-ci.org/jfelten/knowhow-agent)
 =============
 
 This is the agent portion of [knowhow](https://github.com/jfelten/knowhow), which is a tool that let's you create jobs and workflows to manage your environment. A know agent is a web applicaiton that exposes script execution file transfer services on the host it runs on.  It uses socket.io to braodcast events to any other host.
