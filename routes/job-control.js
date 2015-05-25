@@ -12,9 +12,7 @@ var zlib = require('zlib');
 var tar = require('tar');
 var domain = require('domain');
 var fileControl = require('./file-control');
-//var KnowhowShell = require('../../knowhow-shell');
-var KnowhowShell = require('knowhow-shell');
-var knowhowShell = new KnowhowShell(eventEmitter);
+
 
 //constants
 var WORKING_DIR_VAR = "working_dir"
@@ -78,7 +76,7 @@ cancelJob = function(job) {
 	}
 	jobInProgress = undefined;
 	logger.debug("starting cancel for: "+job.id);
-	if (job != undefined) {
+	if (job) {
 		if (job.fileProgress != undefined) {
 			for (fileUpload in job.fileProgress) {
 				fileProgress = job.fileProgress[fileUpload];
@@ -90,7 +88,9 @@ cancelJob = function(job) {
 		job.error = true;
 		job.progress=0;
 		updateJob(job);
-		knowhowShell.cancelJob();
+		if (job.knowhowShell) {
+			job.knowhowShell.cancelJob();
+		}
 		logger.info('canceling job: '+job.id);
 		eventEmitter.emit('job-cancel', job);
 		eventEmitter.emit('upload-complete',job);
@@ -144,11 +144,15 @@ execute = function(job, agentInfo, serverInfo, callback) {
 				}
 				job.env.agent_user = agentInfo.user;
 				job.env.agent_password = agentInfo.password;
-				knowhowShell.executeJob(job, function(err, jobRuntime) {
+				var KnowhowShell = require('../../knowhow-shell');
+				//var KnowhowShell = require('knowhow-shell');
+				job.knowhowShell = new KnowhowShell(eventEmitter);
+				
+				job.knowhowShell.executeJob(job, function(err, jobRuntime) {
 					if(err) {
 						logger.error(job.id+" failed to execute: "+err.message);
 						job.status="Error "+err;
-						cancelJob(job);	
+						//cancelJob(job);	
 						
 					}
 					//if (jobRuntime.output) {
