@@ -144,8 +144,8 @@ execute = function(job, agentInfo, serverInfo, callback) {
 				}
 				job.env.agent_user = agentInfo.user;
 				job.env.agent_password = agentInfo.password;
-				var KnowhowShell = require('../../knowhow-shell');
-				//var KnowhowShell = require('knowhow-shell');
+				//var KnowhowShell = require('../../knowhow-shell');
+				var KnowhowShell = require('knowhow-shell');
 				job.knowhowShell = new KnowhowShell(eventEmitter);
 				
 				job.knowhowShell.executeJob(job, function(err, jobRuntime) {
