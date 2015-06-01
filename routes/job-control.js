@@ -2,7 +2,7 @@
 var EventEmitter = require('events').EventEmitter;
 var eventEmitter = new EventEmitter();
 exports.eventEmitter = eventEmitter;
-var jobQueue = [];
+var jobQueue = {};
 var agentInfo;
 var logger=require('./log-control').logger;
 var pathlib=require("path");
@@ -88,8 +88,8 @@ cancelJob = function(job) {
 		job.error = true;
 		job.progress=0;
 		updateJob(job);
-		if (job.knowhowShell) {
-			job.knowhowShell.cancelJob();
+		if (jobQueue[job.id].knowhowShell) {
+			jobQueue[job.id].knowhowShell.cancelJob();
 		}
 		logger.info('canceling job: '+job.id);
 		eventEmitter.emit('job-cancel', job);
@@ -146,9 +146,9 @@ execute = function(job, agentInfo, serverInfo, callback) {
 				job.env.agent_password = agentInfo.password;
 				//var KnowhowShell = require('../../knowhow-shell');
 				var KnowhowShell = require('knowhow-shell');
-				job.knowhowShell = new KnowhowShell(eventEmitter);
+				jobQueue[job.id].knowhowShell = new KnowhowShell(eventEmitter);
 				
-				job.knowhowShell.executeJob(job, function(err, jobRuntime) {
+				jobQueue[job.id].knowhowShell.executeJob(job, function(err, jobRuntime) {
 					if(err) {
 						logger.error(job.id+" failed to execute: "+err.message);
 						job.status="Error "+err;

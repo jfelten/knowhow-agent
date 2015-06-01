@@ -77,6 +77,14 @@ AgentEventHandler = function(io, agentControl) {
 	this.eventEmitter = agentControl.eventEmitter;
 	logger.info("eventEmitter="+this.eventEmitter);
 		
+		jobControl.eventEmitter.on('execution-start', function(command) {
+			if (command) {
+				//logger.debug(command);
+				//socket.emit('job-update', job);
+				sendExecutionEventToServer('execution-start',  command);
+			}
+		});
+		
 		jobControl.eventEmitter.on('execution-complete', function(command) {
 			if (command) {
 				//logger.debug(command);
