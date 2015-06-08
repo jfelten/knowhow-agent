@@ -101,6 +101,14 @@ AgentEventHandler = function(io, agentControl) {
 			}
 		});
 		
+		jobControl.eventEmitter.on('execution-password-prompt', function(command) {
+			if (command) {
+				logger.debug("execution password prompt event");
+				//socket.emit('job-update', job);
+				sendExecutionEventToServer('execution-password-prompt', command);
+			}
+		});
+		
 		jobControl.eventEmitter.on('job-update', function(job) {
 			if (job) {
 				logger.debug("emit job-update");

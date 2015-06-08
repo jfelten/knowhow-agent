@@ -38,7 +38,16 @@ initAgent = function(agent) {
 		mode: agent.mode,
 		_id: agent._id
 	};
-
+	if (!agentData.user) {
+		require('username')(function (err, username) {
+		    if (err) {logger.error(err.stack); callback(err);}
+		    else {
+		    	logger.debug("retrieved username: "+username);
+			    agentData.user = username;
+			    //return agentData;
+			}
+		});
+	}
 	return agentData;
 
 };

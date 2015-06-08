@@ -148,7 +148,7 @@ execute = function(job, agentInfo, serverInfo, callback) {
 				var KnowhowShell = require('knowhow-shell');
 				jobQueue[job.id].knowhowShell = new KnowhowShell(eventEmitter);
 				
-				jobQueue[job.id].knowhowShell.executeJob(job, function(err, jobRuntime) {
+				jobQueue[job.id].knowhowShell.executeJobAsSubProcess(job, function(err, jobRuntime) {
 					if(err) {
 						logger.error(job.id+" failed to execute: "+err.message);
 						job.status="Error "+err;
