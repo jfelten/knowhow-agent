@@ -17,7 +17,7 @@ var serverInfo;
 var logger=require('./log-control').logger;
 
 initAgent = function(agent) {
-
+	var pjson = require('../package.json');
 	var logger=require('./log-control').logger;
 	logger.info(JSON.stringify(agent));
 	logger.info(process.env);
@@ -36,7 +36,8 @@ initAgent = function(agent) {
 		startTime: new Date(),
 		status: "READY",
 		mode: agent.mode,
-		_id: agent._id
+		_id: agent._id,
+		version: pjson.version
 	};
 	if (!agentData.user) {
 		require('username')(function (err, username) {
@@ -48,6 +49,7 @@ initAgent = function(agent) {
 			}
 		});
 	}
+	console.log(agentData);
 	return agentData;
 
 };

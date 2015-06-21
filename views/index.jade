@@ -12,6 +12,8 @@ block content
 					.qs-navbar
 						ul.serverName
 							| {{agentInfo.user}}@{{agentInfo.host}}:{{agentInfo.port}}
+						.kh-version.pull-right 
+								| knowhow-agent version: {{agentInfo.version}}
 						ul.nav.navbar-nav
 							- var obj = { '/logs':'Logs', '/execute':'Execute', '/api':'API', '/about':'About'  }
 								- each val, key in obj

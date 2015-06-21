@@ -113,6 +113,7 @@ execute = function(job, agentInfo, serverInfo, callback) {
 	});
 	d.run(function() {
 		logger.info("executing: "+job.id+" "+agentInfo);
+		console.log(agentInfo);
 		initiateJob(job, function(err,job) {
 			if (err) {
 				logger.error(err);
@@ -149,7 +150,7 @@ execute = function(job, agentInfo, serverInfo, callback) {
 				//var KnowhowShell = require('../../knowhow-shell');
 				var KnowhowShell = require('knowhow-shell');
 				jobQueue[job.id].knowhowShell = new KnowhowShell(eventEmitter);
-				
+				console.log(job);
 				jobQueue[job.id].knowhowShell.executeJobAsSubProcess(job, function(err, jobRuntime) {
 					if(err) {
 						logger.error(job.id+" failed to execute: "+err.message);

@@ -64,6 +64,7 @@ exports.updateAgentInfo = function (req,res) {
 	logger.debug("updating agent info");
 	var agent = req.body;
 	logger.debug(agent);
+
 	var props = Object.getOwnPropertyNames(agent);
 	props.forEach(function(prop){
 		 
@@ -77,8 +78,7 @@ exports.updateAgentInfo = function (req,res) {
 			agentData.password = encrypt.decrypt(agentInfo.passwordEnc,encrypt.defaultKey);
 		}
 	}
-	
-	res.json({registered:true});
+	res.json(agentInfo);
 	
 }
 
@@ -122,7 +122,6 @@ exports.status =function(req,res) {
 
 exports.logs = function(req,res) {
     numLogs=req.body.numLogs;
-    console.log("num logs requested="+numLogs);
     require('./log-control').getLastXLogs(numLogs,function(logs) {
     	res.json(logs);
     });
