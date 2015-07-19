@@ -70,7 +70,7 @@ initiateJob = function(job, callback) {
 	}
 };
 
-cancelJob = function(job) {
+var cancelJob = function(job) {
 	if (jobInProgress) {
 		delete jobQueue[jobInProgress];
 	}
@@ -88,8 +88,9 @@ cancelJob = function(job) {
 		job.error = true;
 		job.progress=0;
 		updateJob(job);
-		if (jobQueue[job.id].knowhowShell) {
-			jobQueue[job.id].knowhowShell.cancelJob();
+		if (jobQueue[job.id].knowhowShell && jobQueue[job.id].knowhowShell.cancelJob) {
+		    logger.info("clearing knowhow-shell");
+			jobQueue[job.id].knowhowShell.cancelJob(job);
 		}
 		logger.info('canceling job: '+job.id);
 		eventEmitter.emit('job-cancel', job);
@@ -153,9 +154,9 @@ execute = function(job, agentInfo, serverInfo, callback) {
 				console.log(job);
 				jobQueue[job.id].knowhowShell.executeJobAsSubProcess(job, function(err, jobRuntime) {
 					if(err) {
-						logger.error(job.id+" failed to execute: "+err.message);
+						logger.error(job.id+" failed to execute: "+jobRuntime.output);
 						job.status="Error "+err;
-						//cancelJob(job);	
+						cancelJob(job);	
 						
 					}
 					//if (jobRuntime.output) {
@@ -319,7 +320,6 @@ JobControl = function(io) {
 				return;
 			} else if (job.error == true || job.cancelled == true) {
 				socket.emit('Error', {message: 'Invalid Job with id: '+jobId, jobId: jobId, name: data.name} );
-				logger.
 				eventEmitter.emit('job-error',job);
 				return;
 			}

@@ -38,6 +38,7 @@ var broadcastEvents = function(agentControl, io) {
 	};
 	
 function sendJobEventToServer(eventType, job) {
+	logger.debug("emitting "+eventType+" event.");
 	if (job) {
 		for (var i=0; i<connectedSockets.length; i++) {
 			var socket = connectedSockets[i];
@@ -108,6 +109,13 @@ AgentEventHandler = function(io, agentControl) {
 				sendExecutionEventToServer('execution-password-prompt', command);
 			}
 		});
+		jobControl.eventEmitter.on('execution-output', function(output) {
+			if (output) {
+				logger.debug("execution output event");
+				//socket.emit('job-update', job);
+				sendExecutionEventToServer('execution-output', output);
+			}
+		});
 		
 		jobControl.eventEmitter.on('job-update', function(job) {
 			if (job) {
@@ -135,10 +143,10 @@ AgentEventHandler = function(io, agentControl) {
 			}
 		});
 		
-		jobControl.eventEmitter.on('job-cancel', function(jobId) {
-			logger.info("sending cancel message to server for: "+jobId);
+		jobControl.eventEmitter.on('job-cancel', function(job) {
+			logger.info("sending cancel message to server for: "+job.id);
 			//socket.emit('job-cancel', jobId);
-			sendJobEventToServer('job-cancel', jobId);
+			sendJobEventToServer('job-cancel', job);
 		});
 		
 		agentControl.eventEmitter.on('agent-update', function(agent) {
