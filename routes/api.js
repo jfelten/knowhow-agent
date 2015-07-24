@@ -6,19 +6,22 @@ var encrypt = require('../util/encrypt');
 var agentControl = new AgentControl(agent.io);
 var jobControl = new JobControl(agent.io);
 var loggerControl = new LoggerControl(agent.io);
+var rimraf = require('rimraf');
+
+var logger=require('./log-control').logger;
+require('./agent-events');
+var agentEventHandler = new AgentEventHandler(agent.io,agentControl,jobControl);
+var fileUploadControl = require('./file-upload-control')(agent.io,jobControl);
+
 var agentInfo = agentControl.initAgent(agent.agentData);
+
+
 var serverInfo = {
 	host: undefined,
 	port: undefined,
 	cryptoKey: undefined
 };
-var rimraf = require('rimraf');
 
-var logger=require('./log-control').logger;
-require('./agent-events');
-
-var agentEventHandler = new AgentEventHandler(agent.io,agentControl);
-require('shelljs/global');
 
 exports.deleteAgent = function(req,res) {
 	
@@ -55,6 +58,8 @@ exports.registerServer = function(req,res) {
 	logger.info("server requesting registration from: "+serverInfo.ip);
 	agentEventHandler.registerServer(serverInfo);
 	agentControl.registerServer(serverInfo);
+	agentEventHandler.openEventSocketToServer(serverInfo);
+    fileUploadControl.openFileSocketToServer(serverInfo);
 	logger.info(agentEventHandler.serverInfo);
 	res.json({registered:true});
 	

@@ -1,7 +1,5 @@
 
 var EventEmitter = require('events').EventEmitter;
-var eventEmitter = new EventEmitter();
-exports.eventEmitter = eventEmitter;
 var jobQueue = {};
 var agentInfo;
 var logger=require('./log-control').logger;
@@ -11,7 +9,7 @@ var mkdirp = require('mkdirp');
 var zlib = require('zlib');
 var tar = require('tar');
 var domain = require('domain');
-var fileControl = require('./file-control');
+var eventEmitter=new EventEmitter();
 
 
 //constants
@@ -93,6 +91,7 @@ var cancelJob = function(job) {
 			jobQueue[job.id].knowhowShell.cancelJob(job);
 		}
 		logger.info('canceling job: '+job.id);
+		job.progress=0;
 		eventEmitter.emit('job-cancel', job);
 		eventEmitter.emit('upload-complete',job);
 		jobQueue[job.id] = undefined;
@@ -150,6 +149,7 @@ execute = function(job, agentInfo, serverInfo, callback) {
 				job.env.agent_port = agentInfo.port;
 				//var KnowhowShell = require('../../knowhow-shell');
 				var KnowhowShell = require('knowhow-shell');
+				jobQueue[job.id] = {};
 				jobQueue[job.id].knowhowShell = new KnowhowShell(eventEmitter);
 				console.log(job);
 				jobQueue[job.id].knowhowShell.executeJobAsSubProcess(job, function(err, jobRuntime) {
@@ -286,8 +286,11 @@ JobControl = function(io) {
 
 	//logger.info('setting event io to:'+io);
 	this.io = io;
-	this.eventEmitter=new EventEmitter();
+	
 	this.socket = undefined;
+	this.jobQueue=jobQueue;
+	this.cancelJob = cancelJob.bind({eventEmitter: this.eventEmiter});;
+	this.execute = execute.bind({eventEmitter: this.eventEmiter});
 	
 	eventEmitter.on('upload-complete', function(job) {
 			logger.debug("sending upload complete to server");
@@ -299,93 +302,10 @@ JobControl = function(io) {
 	eventEmitter.on('file-uploaded', function(jobId, filename) {
 					
 	});
-	
-	
-	var up = io.of('/upload');
-
-	up.on('connection', function (socket) {
-		this.socket=socket;
-		logger.info('upload request');
-		var jobId = '';
-		
-		
-		ss(socket).on('agent-upload', {highWaterMark: 32 * 1024}, function(stream, data) {
-		    
-		    jobId = data['jobId'];
-			var job = jobQueue[jobId];
-			var lastProgress=1;
-			if (job == undefined) {
-				socket.emit('Error', {message: 'No active Job with id: '+jobId, jobId: jobId, name: data.name} );
-				eventEmitter.emit('job-error',job);
-				return;
-			} else if (job.error == true || job.cancelled == true) {
-				socket.emit('Error', {message: 'Invalid Job with id: '+jobId, jobId: jobId, name: data.name} );
-				eventEmitter.emit('job-error',job);
-				return;
-			}
-			
-	        job.status="receiving files."
-	        job.progress=(job.progress)+1;
-	        updateJob(job);
-			
-			try {
-				fileControl.forkStream (stream, data.destination, function(err, streams) {
-					logger.debug("forked: "+  data.name+" into "+streams.length+" streams.");
-					for (fileStream in streams) {
-						
-						var dest = streams[fileStream].destination;
-						if (job.script && job.script.env) {
-							job.script.env.working_dir= job.working_dir;
-							dest = fileControl.replaceVars(streams[fileStream].destination, job.script.env);
-						}
-						logger.debug("saving: "+ data.name+" to "+dest+" dontUpload="+job.options.dontUploadIfFileExists);
-						var overwrite = (job.options && job.options.dontUploadIfFileExists!=true);
-						var isDirectory = data['isDirectory']
-						fileControl.saveFile(streams[fileStream].stream, data.name, data.fileSize, dest, socket, overwrite, isDirectory, job);
-					}
-				});
-			} catch(err) {
-				socket.emit('Error', {message: 'Unable to save: '+data.name+' for job: '+jobId, jobId: jobId, name: data.name} );
-				logger.error(err.message);
-				logger.error(err.stack);
-				job.message = 'upload error: '+data.name;
-				eventEmitter.emit('job-error',job);
-				return;
-			}
-		       
-		});
-			
-		socket.on('client-upload-error', function(data) {
-		    var jobId = data['jobId'];
-			logger.error('Problem uploading: '+data.name+' for job: '+jobId);
-			logger.error('Cancelling job: '+jobId);
-			var job = jobQueue[jobId];
-			if (job == undefined) {
-				socket.emit('Error', {message: 'No active Job with id: '+jobId} );
-				return;
-			}
-			cancelJob(job);
-			socket.emit('End',{message: 'job cancelled: ',jobId: jobId, fileName: data.name});
-		});
-		socket.on('disconnect', function(err) {
-			logger.debug("upload connection ended.");
-			if (jobInProgress) {
-				jobQueue[jobInProgress].disconnected = true;
-			}
-			this.socket=undefined;
-				
-		});
-		
-		socket.on('error', function(err) {
-			logger.error("socket error");
-			logger.error(err);
-		});
-		
-	});
-	
-	
-
+	return this;
 };
+
+
 
 //var io = require('socket.io').listen(server)
 JobControl.prototype.initiateJob  = initiateJob ;

@@ -1,5 +1,4 @@
 var logger=require('./log-control').logger;
-var jobControl=require('./job-control');
 
 var io;
 var eventEmitter;
@@ -7,7 +6,44 @@ var serverInfo;
 
 var connectedSockets = [];
 
-var broadcastEvents = function(agentControl, io) {
+
+function configureEventSocket(socket, nextIndex, jobControl) {
+
+	var self=this;
+	self.jobControl = jobControl;
+    console.log("jobControl="+jobControl);
+	socket.on('disconnect',function(err) {
+	 	logger.info("removing listeners");
+	 	delete connectedSockets[nextIndex];
+	 });
+		
+	
+	socket.on('job-cancel', function(job) {
+		logger.info("cancel requested by server for: "+job.id);
+		self.jobControl.cancelJob(job);
+			//socket.emit('job-cancel', job);
+	});
+
+}
+
+/**
+ * opens an event socket to an knowhow-server
+ */
+var openEventSocketToServer = function(serverInfo) {
+	var nextIndex = connectedSockets.length;
+	 var eventSocket = require('socket.io-client')('http://'+serverInfo.host+':'+serverInfo.port+'/agent-events');
+	 eventSocket.open();
+	 configureEventSocket(eventSocket, nextIndex, this.jobControl);
+	 
+	 //var fileSocket = require('socket.io-client')('http://'+serverInfo.host+':'+serverInfo.port+'/agent-file');
+	 //fileSocket.open();
+}
+
+/**
+ * listens for and registers new incoming socket connections
+ *
+ */
+var listenForIncomingEventSockets = function(io, jobControl) {
 	var eventListener = io.of('/agent-events');
 	var nextIndex = connectedSockets.length;
 	
@@ -15,27 +51,13 @@ var broadcastEvents = function(agentControl, io) {
 		logger.info('new event listener connected');
 		connectedSockets.push(socket);
 		
-		var closeListener = function() {
-			logger.info("removing listener");
-		}
-		
-		socket.on('disconnect',function(err) {
-			logger.info("removing listeners");
-			delete connectedSockets[nextIndex];
-		});
-		
-
-		socket.on('job-cancel', function(job) {
-			logger.info("cancel requested by server for: "+job.id);
-			jobControl.cancelJob(job);
-			//socket.emit('job-cancel', job);
-		});
+		configureEventSocket(socket, nextIndex, jobControl);
 		
 
 		
 
 	});
-	};
+};
 	
 function sendJobEventToServer(eventType, job) {
 	logger.debug("emitting "+eventType+" event.");
@@ -44,6 +66,8 @@ function sendJobEventToServer(eventType, job) {
 			var socket = connectedSockets[i];
 			if (socket) {
 				socket.emit(eventType, {id: job.id, progress: job.progress, status: job.status});
+			} else {
+				logger.error("invalid event socket");
 			}
 		}
 	}
@@ -72,7 +96,7 @@ function sendAgentEventToServer(eventType, agent) {
 }
 	
 
-AgentEventHandler = function(io, agentControl) {
+AgentEventHandler = function(io, agentControl, jobControl) {
 	logger.info('setting event io to:'+io);
 	this.io = io;
 	this.eventEmitter = agentControl.eventEmitter;
@@ -187,7 +211,10 @@ AgentEventHandler = function(io, agentControl) {
 			}
 		});
 	
-	broadcastEvents(agentControl, io);
+	listenForIncomingEventSockets(io,jobControl)
+	this.openEventSocketToServer = openEventSocketToServer.bind({jobControl: jobControl});
+	
+	return this;
 	
 }
 
