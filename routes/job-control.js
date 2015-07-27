@@ -31,7 +31,7 @@ completeJob = function(job) {
 updateJob = function(job) {
 	if(jobQueue[job.id]) {
 		eventEmitter.emit('job-update',job);
-		jobQueue[job.id] = job;
+		jobQueue[job.id].job = job;
 	}
 	//logger.debug('updated:');
 };
@@ -48,7 +48,8 @@ initiateJob = function(job, callback) {
 		logger.info("initializing: "+job.id);
 		jobInProgress = job.id;
 		job.fileProgress = {};
-		jobQueue[job.id] =job;
+		jobQueue[job.id] ={};
+		jobQueue[job.id].job = job
 		job.totalFileSize=0;
 		//check for relative paths and substitute working directory path
 
@@ -74,10 +75,10 @@ var cancelJob = function(job) {
 	jobInProgress = undefined;
 	logger.debug("starting cancel for: "+job.id);
 	if (job) {
-		if (job.fileProgress != undefined) {
+		if (!job.fileProgress) {
 			for (fileUpload in job.fileProgress) {
 				fileProgress = job.fileProgress[fileUpload];
-				if (fileProgress != undefined) {
+				if (!fileProgress) {
 					fileProgress.error = true;
 				}
 			}	
@@ -93,7 +94,7 @@ var cancelJob = function(job) {
 		job.progress=0;
 		eventEmitter.emit('job-cancel', job);
 		eventEmitter.emit('upload-complete',job);
-		jobQueue[job.id] = undefined;
+		delete jobQueue[job.id];
 		jobInProgress = undefined;
 	}
 	

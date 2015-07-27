@@ -41,7 +41,7 @@ var configureFileSocket = function(socket, eventEmitter, jobQueue) {
 	ss(socket).on('agent-upload', {highWaterMark: 32 * 1024}, function(stream, data) {
 	    
 	    var jobId = data['jobId'];
-		var job = jobQueue[jobId];
+		var job = jobQueue[jobId].job;
 		var lastProgress=1;
 		if (job == undefined) {
 			socket.emit('Error', {message: 'No active Job with id: '+jobId, jobId: jobId, name: data.name} );
@@ -67,7 +67,11 @@ var configureFileSocket = function(socket, eventEmitter, jobQueue) {
 						job.script.env.working_dir= job.working_dir;
 						dest = fileControl.replaceVars(streams[fileStream].destination, job.script.env);
 					}
-					logger.debug("saving: "+ data.name+" to "+dest+" dontUpload="+job.options.dontUploadIfFileExists);
+					var dontUpload = false;
+					if (job.options && job.options.dontUploadIfFileExists) {
+						dontUpload = job.options.dontUploadIfFileExists;
+					}
+					logger.debug("saving: "+ data.name+" to "+dest+" dontUpload="+dontUpload);
 					var overwrite = (job.options && job.options.dontUploadIfFileExists!=true);
 					var isDirectory = data['isDirectory']
 					fileControl.saveFile(streams[fileStream].stream, data.name, data.fileSize, dest, socket, overwrite, isDirectory, job);
