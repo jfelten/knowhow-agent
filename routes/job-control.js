@@ -29,8 +29,10 @@ completeJob = function(job) {
 }
 
 updateJob = function(job) {
-	eventEmitter.emit('job-update',job);
-	jobQueue[job.id] = job;
+	if(jobQueue[job.id]) {
+		eventEmitter.emit('job-update',job);
+		jobQueue[job.id] = job;
+	}
 	//logger.debug('updated:');
 };
 
@@ -55,9 +57,9 @@ initiateJob = function(job, callback) {
 		}
 
 		job.status="initialized";
-		jobQueue[job.id]=job;
+		//jobQueue[job.id]=job;
 		logger.debug("job id:"+job.id+" initialized using working directory: "+job.working_dir);
-		eventEmitter.emit('job-update',job);
+		updateJob(job);
 		callback(undefined, job);
 	} catch (err) {
 		logger.error(err.stack);
@@ -69,9 +71,6 @@ initiateJob = function(job, callback) {
 };
 
 var cancelJob = function(job) {
-	if (jobInProgress) {
-		delete jobQueue[jobInProgress];
-	}
 	jobInProgress = undefined;
 	logger.debug("starting cancel for: "+job.id);
 	if (job) {
@@ -86,7 +85,7 @@ var cancelJob = function(job) {
 		job.error = true;
 		job.progress=0;
 		updateJob(job);
-		if (jobQueue[job.id].knowhowShell && jobQueue[job.id].knowhowShell.cancelJob) {
+		if (jobQueue[job.id] && jobQueue[job.id].knowhowShell && jobQueue[job.id].knowhowShell.cancelJob) {
 		    logger.info("clearing knowhow-shell");
 			jobQueue[job.id].knowhowShell.cancelJob(job);
 		}
@@ -136,7 +135,7 @@ execute = function(job, agentInfo, serverInfo, callback) {
 				}
 				logger.info("all files received - executing job");
 				job.status="All files Received.";
-				eventEmitter.emit('job-update',job);
+				updateJob(job);
 				if (!job.script.env) {
 					job.script.env = {};
 				}
@@ -154,8 +153,9 @@ execute = function(job, agentInfo, serverInfo, callback) {
 				console.log(job);
 				jobQueue[job.id].knowhowShell.executeJobAsSubProcess(job, function(err, jobRuntime) {
 					if(err) {
-						logger.error(job.id+" failed to execute: "+jobRuntime.output);
-						job.status="Error "+err;
+						if (jobRuntime)
+							logger.error(job.id+" failed to execute: "+jobRuntime.output);
+						job.status="Error "+err.message;
 						cancelJob(job);	
 						
 					}
@@ -177,7 +177,7 @@ waitForFiles = function(job,callback) {
 	
 	var agent = this.agent;
     job.status = 'receiving files';
-    eventEmitter.emit('job-update',job);
+    updateJob(job);
     
     //timeout after x seconds
     timeoutms=600000;//default timeout of 10 minutes
