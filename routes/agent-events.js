@@ -60,7 +60,7 @@ var listenForIncomingEventSockets = function(io, jobControl) {
 };
 	
 function sendJobEventToServer(eventType, job) {
-	logger.debug("emitting "+eventType+" event.");
+	//logger.debug("emitting "+eventType+" event.");
 	if (job) {
 		for (var i=0; i<connectedSockets.length; i++) {
 			var socket = connectedSockets[i];
@@ -120,7 +120,7 @@ AgentEventHandler = function(io, agentControl, jobControl) {
 		
 		jobControl.eventEmitter.on('execution-error', function(command) {
 			if (command) {
-				logger.debug("execution complete event");
+				//logger.debug("execution complete event");
 				//socket.emit('job-update', job);
 				sendExecutionEventToServer('execution-error', command);
 			}
@@ -128,14 +128,14 @@ AgentEventHandler = function(io, agentControl, jobControl) {
 		
 		jobControl.eventEmitter.on('execution-password-prompt', function(command) {
 			if (command) {
-				logger.debug("execution password prompt event");
+				//logger.debug("execution password prompt event");
 				//socket.emit('job-update', job);
 				sendExecutionEventToServer('execution-password-prompt', command);
 			}
 		});
 		jobControl.eventEmitter.on('execution-output', function(output) {
 			if (output) {
-				logger.debug("execution output event");
+				//logger.debug("execution output event "+ output);
 				//socket.emit('job-update', job);
 				sendExecutionEventToServer('execution-output', output);
 			}
@@ -143,34 +143,34 @@ AgentEventHandler = function(io, agentControl, jobControl) {
 		
 		jobControl.eventEmitter.on('job-update', function(job) {
 			if (job) {
-				logger.debug("emit job-update");
+				//logger.debug("emit job-update");
 				//socket.emit('job-update', job);
-				sendJobEventToServer('job-update',  job);
+				sendJobEventToServer('job-update',  {id: job.id, status: job.status, message: job.message});
 			}
 		});
 		
 		jobControl.eventEmitter.on('job-error', function(job) {
 			if (job) {
-				logger.debug("job error: "+job.id);
+				//logger.debug("job error: "+job.id);
 				//socket.emit('job-error', job);
 				jobControl.cancelJob(job);
-				sendJobEventToServer('job-error', job);
+				sendJobEventToServer('job-error', {id: job.id, status: job.status, message: job.message});
 			}
 		});
 		
 		jobControl.eventEmitter.on('job-complete', function(job) {
 			if (job) {
-				logger.debug("job complete event: "+job.id);
+				//logger.debug("job complete event: "+job.id);
 				completeJob(job);
 				//socket.emit('job-complete', job);
-				sendJobEventToServer('job-complete', job);
+				sendJobEventToServer('job-complete', {id: job.id, status: job.status, message: job.message});
 			}
 		});
 		
 		jobControl.eventEmitter.on('job-cancel', function(job) {
 			logger.info("sending cancel message to server for: "+job.id);
 			//socket.emit('job-cancel', jobId);
-			sendJobEventToServer('job-cancel', job);
+			sendJobEventToServer('job-cancel', {id: job.id, status: job.status, message: job.message});
 		});
 		
 		agentControl.eventEmitter.on('agent-update', function(agent) {
