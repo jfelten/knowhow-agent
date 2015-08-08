@@ -83,9 +83,9 @@ function sendExecutionEventToServer(eventType, command) {
 			var socket = connectedSockets[i];
 			if (socket) {
 				try {
-					socket.emit(eventType, agent);
+					socket.emit(eventType, command);
 				} catch( err) {
-					logger.err(err.stack);
+					logger.error(err.stack);
 				}
 			}
 		}
