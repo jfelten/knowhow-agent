@@ -65,7 +65,11 @@ function sendJobEventToServer(eventType, job) {
 		for (var i=0; i<connectedSockets.length; i++) {
 			var socket = connectedSockets[i];
 			if (socket) {
-				socket.emit(eventType, {id: job.id, progress: job.progress, status: job.status});
+				try {
+					socket.emit(eventType, {id: job.id, progress: job.progress, status: job.status});
+				} catch (err) {
+					logger.error(err.stack);
+				}
 			} else {
 				logger.error("invalid event socket");
 			}
@@ -78,7 +82,11 @@ function sendExecutionEventToServer(eventType, command) {
 		for (var i=0; i<connectedSockets.length; i++) {
 			var socket = connectedSockets[i];
 			if (socket) {
-				socket.emit(eventType, command);
+				try {
+					socket.emit(eventType, agent);
+				} catch( err) {
+					logger.err(err.stack);
+				}
 			}
 		}
 	}
@@ -89,7 +97,11 @@ function sendAgentEventToServer(eventType, agent) {
 		for (var i=0; i<connectedSockets.length; i++) {
 			var socket = connectedSockets[i];
 			if (socket) {
-				socket.emit(eventType, agent);
+			try {
+					socket.emit(eventType, agent);
+				} catch( err) {
+					logger.err(err.stack);
+				}
 			}
 		}
 	}
